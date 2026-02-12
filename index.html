@@ -11,7 +11,7 @@ body {
     font-family: Arial, sans-serif;
     background-color: #ffe6f0;
     margin: 0;
-    padding-top: 80px;
+    padding-top: 60px;
     overflow: hidden;
 }
 
@@ -20,11 +20,19 @@ h1 {
     padding: 20px;
 }
 
+#message {
+    font-size: 20px;
+    height: 50px;
+    color: #cc0066;
+}
+
 button {
     padding: 15px 25px;
     font-size: 18px;
     border-radius: 12px;
     border: none;
+    margin: 10px;
+    transition: all 0.3s ease;
 }
 
 #yes {
@@ -35,7 +43,7 @@ button {
 #no {
     background-color: #999;
     color: white;
-    position: absolute;
+    position: relative;
 }
 </style>
 </head>
@@ -43,12 +51,31 @@ button {
 <body>
 
 <h1>¿Quieres ser mi San Valentín? 💘</h1>
+<div id="message"></div>
 
 <button id="yes" onclick="yesClicked()">Sí 💕</button>
 <button id="no">No 😈</button>
 
+<!-- Música Lo-Fi -->
+<audio id="music" autoplay loop>
+  <source src="lofi.mp3" type="audio/mpeg">
+</audio>
+
 <script>
+
+let attempts = 0;
+
 const noBtn = document.getElementById("no");
+const yesBtn = document.getElementById("yes");
+const message = document.getElementById("message");
+
+const messages = [
+    "¿Estás segura? 🤨",
+    "Piénsalo bien...",
+    "Mira que luego no hay vuelta atrás 😶",
+    "Estoy empezando a ofenderme...",
+    "Última oportunidad..."
+];
 
 function moveButton() {
     const maxX = window.innerWidth - noBtn.offsetWidth;
@@ -57,25 +84,58 @@ function moveButton() {
     const x = Math.random() * maxX;
     const y = Math.random() * maxY;
 
+    noBtn.style.position = "absolute";
     noBtn.style.left = x + "px";
     noBtn.style.top = y + "px";
 }
 
-// Para ordenador
-noBtn.addEventListener("mouseover", moveButton);
+noBtn.addEventListener("click", function(e) {
 
-// Para móvil (cuando intenta tocarlo)
-noBtn.addEventListener("touchstart", function(e) {
-    e.preventDefault();
-    moveButton();
+    attempts++;
+    console.log("Intento:", attempts);
+
+    if (attempts <= messages.length) {
+        message.innerText = messages[attempts - 1];
+    }
+
+    // Idea divertida 1
+    if (attempts === 6) {
+        message.innerText = "Estoy empezando a sospechar que no sabes usar esta web...";
+    }
+
+    // Idea divertida 2
+    if (attempts === 7) {
+        message.innerText = "El botón 'Sí' está justo al lado eh 👀";
+    }
+
+    // El botón Sí crece progresivamente
+    yesBtn.style.transform = "scale(" + (1 + attempts * 0.15) + ")";
+
+    // A partir de cierto punto el botón No huye
+    if (attempts >= 5) {
+        moveButton();
+    }
+
+    // Final mejorado
+    if (attempts >= 8) {
+        document.body.innerHTML = `
+            <h1>💔 Has roto el sistema.</h1>
+            <h2>Mi ego ha sufrido daño crítico.</h2>
+            <p>Reiniciando encanto en 3... 2... 1... 😎</p>
+            <button onclick="location.reload()">Vale, otra vez 😂</button>
+        `;
+    }
+
 });
 
 function yesClicked() {
     document.body.innerHTML = `
         <h1>Sabía que dirías que sí 😎💘</h1>
-        <h2>Te amo ❤️</h2>
+        <h2>Prepárate para la mejor cita de tu vida ❤️</h2>
+        <p>(La música lo-fi sigue porque esto ya es cine romántico)</p>
     `;
 }
+
 </script>
 
 </body>
