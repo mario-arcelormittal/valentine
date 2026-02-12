@@ -10,16 +10,22 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: #ffe6f0;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* Contenedor principal */
+#game-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden;
-    text-align: center;
+    justify-content: space-between; /* mantiene botones abajo pero no pegados */
+    padding: 40px 20px;
 }
 
 /* Parte superior */
 #top {
-    padding: 40px 20px 10px 20px;
+    flex: 1;
 }
 
 h1 {
@@ -35,9 +41,7 @@ h1 {
 
 /* Parte inferior */
 #bottom {
-    margin-top: 20px; /* ajusta este número */
-    padding-bottom: 40px;
-    position: relative;
+    position: relative; /* para mover botones */
 }
 
 button {
@@ -63,28 +67,39 @@ button {
 
 <body>
 
-<div id="top">
-    <h1>¿Quieres ser mi San Valentín? 💘</h1>
-    <div id="message"></div>
+<div id="game-container">
+    <div id="top">
+        <h1>¿Quieres ser mi San Valentín? 💘</h1>
+        <div id="message"></div>
+    </div>
+
+    <div id="bottom">
+        <button id="yes" onclick="yesClicked()">Sí 💕</button>
+        <button id="no">No 😈</button>
+    </div>
 </div>
 
-<div id="bottom">
-    <button id="yes" onclick="yesClicked()">Sí 💕</button>
-    <button id="no">No 😈</button>
-</div>
-
-<audio autoplay loop>
+<!-- Música Lo-Fi -->
+<audio id="music" loop>
   <source src="lofi.mp3" type="audio/mpeg">
 </audio>
-    
-<script>
 
+<script>
 let attempts = 0;
 
 const noBtn = document.getElementById("no");
 const yesBtn = document.getElementById("yes");
 const message = document.getElementById("message");
+const music = document.getElementById("music");
 
+// Intentar reproducir la música al cargar
+window.addEventListener("load", () => {
+    music.play().catch(()=>{ 
+        console.log("Autoplay bloqueado, espera interacción");
+    });
+});
+
+// Mensajes graciosos
 const messages = [
     "¿Estás segura? 🤨",
     "Piénsalo bien...",
@@ -93,20 +108,28 @@ const messages = [
     "Última oportunidad..."
 ];
 
+// Mover botón No, limitado para no salirse de pantalla
 function moveButton() {
-    const maxX = window.innerWidth - noBtn.offsetWidth;
-    const maxY = window.innerHeight - noBtn.offsetHeight;
+    const margin = 20; // margen de seguridad
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    // Definir límites
+    const maxX = windowWidth - btnWidth - margin;
+    const maxY = windowHeight - btnHeight - margin - 150; // 150px espacio superior
 
     const x = Math.random() * maxX;
-    const y = Math.random() * maxY;
+    const y = 150 + Math.random() * (maxY - 150); // no sube demasiado
 
     noBtn.style.position = "absolute";
     noBtn.style.left = x + "px";
     noBtn.style.top = y + "px";
 }
 
+// Evento click en No
 noBtn.addEventListener("click", function() {
-
     attempts++;
     console.log("Intento:", attempts);
 
@@ -122,37 +145,52 @@ noBtn.addEventListener("click", function() {
         message.innerText = "El botón 'Sí' está justo al lado eh 👀";
     }
 
+    // Escalar botón Sí progresivamente
     yesBtn.style.transform = "scale(" + (1 + attempts * 0.15) + ")";
 
+    // A partir del intento 5, mover No
     if (attempts >= 5) {
         moveButton();
     }
 
+    // Final gracioso
     if (attempts >= 8) {
-        document.body.innerHTML = `
-            <div style="padding:40px">
-                <h1>💔 Has roto el sistema.</h1>
-                <h2>Mi ego ha sufrido daño crítico.</h2>
-                <p>Reiniciando encanto en 3... 2... 1... 😎</p>
-                <button onclick="location.reload()">Vale, otra vez 😂</button>
-            </div>
+        document.getElementById("top").innerHTML = `
+            <h1>💔 Has roto el sistema.</h1>
+            <h2>Mi ego ha sufrido daño crítico.</h2>
+            <p>Reiniciando encanto en 3... 2... 1... 😎</p>
+            <button onclick="restartGame()">Vale, otra vez 😂</button>
         `;
+        document.getElementById("bottom").style.display = "none";
     }
-
 });
 
+// Función Sí
 function yesClicked() {
-    document.body.innerHTML = `
-        <div style="padding:40px">
-            <h1>Sabía que dirías que sí 😎💘</h1>
-            <h2>Prepárate para la mejor cita de tu vida ❤️</h2>
-        </div>
+    document.getElementById("top").innerHTML = `
+        <h1>Sabía que dirías que sí 😎💘</h1>
+        <h2>Prepárate para la mejor cita de tu vida ❤️</h2>
     `;
+    document.getElementById("bottom").style.display = "none";
+}
+
+// Reiniciar juego sin destruir audio
+function restartGame() {
+    attempts = 0;
+    document.getElementById("top").innerHTML = `
+        <h1>¿Quieres ser mi San Valentín? 💘</h1>
+        <div id="message"></div>
+    `;
+    document.getElementById("bottom").style.display = "block";
+    noBtn.style.position = "relative";
+    noBtn.style.left = "";
+    noBtn.style.top = "";
+    yesBtn.style.transform = "scale(1)";
 }
 
 </script>
 
 </body>
-
 </html>
+
 
