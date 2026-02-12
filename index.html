@@ -41,7 +41,7 @@ h1 {
 
 /* Parte inferior */
 #bottom {
-    position: relative; /* para mover botones */
+    position: relative;
 }
 
 button {
@@ -80,7 +80,7 @@ button {
 </div>
 
 <!-- Música Lo-Fi -->
-<audio id="music" loop>
+<audio id="music" loop autoplay>
   <source src="lofi.mp3" type="audio/mpeg">
 </audio>
 
@@ -108,27 +108,28 @@ const messages = [
     "Última oportunidad..."
 ];
 
-// Mover botón No, limitado para no salirse de pantalla
+// Función para mover el botón No, sin salirse de pantalla
 function moveButton() {
-    const margin = 20; // margen de seguridad
-    const btnWidth = noBtn.offsetWidth;
-    const btnHeight = noBtn.offsetHeight;
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+    const margin = 10; // margen de seguridad
+    const rect = noBtn.getBoundingClientRect();
+    const btnWidth = rect.width;
+    const btnHeight = rect.height;
 
-    // Definir límites
-    const maxX = windowWidth - btnWidth - margin;
-    const maxY = windowHeight - btnHeight - margin - 150; // 150px espacio superior
+    const containerWidth = window.innerWidth;
+    const containerHeight = window.innerHeight;
 
-    const x = Math.random() * maxX;
-    const y = 150 + Math.random() * (maxY - 150); // no sube demasiado
+    const maxX = containerWidth - btnWidth - margin;
+    const maxY = containerHeight - btnHeight - margin - 150; // espacio superior para mensaje
+
+    const x = margin + Math.random() * (maxX - margin);
+    const y = 150 + Math.random() * (maxY - 150);
 
     noBtn.style.position = "absolute";
     noBtn.style.left = x + "px";
     noBtn.style.top = y + "px";
 }
 
-// Evento click en No
+// Click en No
 noBtn.addEventListener("click", function() {
     attempts++;
     console.log("Intento:", attempts);
@@ -165,7 +166,7 @@ noBtn.addEventListener("click", function() {
     }
 });
 
-// Función Sí
+// Click en Sí
 function yesClicked() {
     document.getElementById("top").innerHTML = `
         <h1>Sabía que dirías que sí 😎💘</h1>
@@ -192,5 +193,3 @@ function restartGame() {
 
 </body>
 </html>
-
-
