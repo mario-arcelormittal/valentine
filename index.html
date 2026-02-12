@@ -1,195 +1,200 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>San Valentín 💘</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>San Valentín 💘</title>
+    <style>
+        :root {
+            --pink: #ff4d88;
+            --soft-pink: #ffe6f0;
+        }
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #ffe6f0;
-    text-align: center;
-    overflow: hidden;
-}
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--soft-pink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden; /* Evita scrolls raros al mover el botón */
+            text-align: center;
+        }
 
-/* Contenedor principal */
-#game-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    justify-content: space-between; /* mantiene botones abajo pero no pegados */
-    padding: 40px 20px;
-}
+        #ui-layer {
+            z-index: 10;
+            padding: 20px;
+            max-width: 90%;
+        }
 
-/* Parte superior */
-#top {
-    flex: 1;
-}
+        h1 {
+            color: #cc0066;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
 
-h1 {
-    font-size: 28px;
-}
+        #message {
+            font-size: 1.2rem;
+            color: #ff1a75;
+            font-weight: bold;
+            min-height: 1.5em;
+            margin-bottom: 20px;
+        }
 
-#message {
-    font-size: 20px;
-    color: #cc0066;
-    min-height: 60px;
-    margin-top: 20px;
-}
+        .buttons-container {
+            position: relative;
+            width: 100%;
+            height: 100px; /* Espacio reservado para los botones */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
 
-/* Parte inferior */
-#bottom {
-    position: relative;
-}
+        button {
+            padding: 15px 25px;
+            font-size: 18px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+            white-space: nowrap;
+        }
 
-button {
-    padding: 15px 25px;
-    font-size: 18px;
-    border-radius: 12px;
-    border: none;
-    margin: 15px;
-    transition: transform 0.3s ease;
-}
+        #yes {
+            background-color: var(--pink);
+            color: white;
+            z-index: 5;
+        }
 
-#yes {
-    background-color: #ff4d88;
-    color: white;
-}
+        #no {
+            background-color: #999;
+            color: white;
+            position: relative; /* Cambia a absolute dinámicamente */
+            z-index: 4;
+        }
 
-#no {
-    background-color: #999;
-    color: white;
-}
-</style>
+        /* Estilo para el botón de reinicio */
+        .restart-btn {
+            background-color: #333;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="game-container">
-    <div id="top">
-        <h1>¿Quieres ser mi San Valentín? 💘</h1>
-        <div id="message"></div>
+    <div id="ui-layer">
+        <div id="content">
+            <h1>¿Quieres ser mi San Valentín? 💘</h1>
+            <div id="message"></div>
+            
+            <div class="buttons-container" id="btn-wrapper">
+                <button id="yes" onclick="yesClicked()">Sí 💕</button>
+                <button id="no" onmouseover="moveButton()" onclick="moveButton()">No 😈</button>
+            </div>
+        </div>
     </div>
 
-    <div id="bottom">
-        <button id="yes" onclick="yesClicked()">Sí 💕</button>
-        <button id="no">No 😈</button>
-    </div>
-</div>
+    <audio id="music" loop>
+        <source src="lofi.mp3" type="audio/mpeg">
+    </audio>
 
-<!-- Música Lo-Fi -->
-<audio id="music" loop autoplay>
-  <source src="lofi.mp3" type="audio/mpeg">
-</audio>
+    <script>
+        let attempts = 0;
+        const noBtn = document.getElementById("no");
+        const yesBtn = document.getElementById("yes");
+        const message = document.getElementById("message");
+        const music = document.getElementById("music");
 
-<script>
-let attempts = 0;
+        const messages = [
+            "¿Estás segura? 🤨",
+            "Piénsalo bien...",
+            "¡Mira que el 'Sí' es más bonito! ✨",
+            "¿De verdad me vas a decir que no? 💔",
+            "¡Inténtalo otra vez! 😤",
+            "¡Que no se puede! 😂"
+        ];
 
-const noBtn = document.getElementById("no");
-const yesBtn = document.getElementById("yes");
-const message = document.getElementById("message");
-const music = document.getElementById("music");
+        // --- GESTIÓN DE MÚSICA ---
+        function startMusic() {
+            music.play().catch(() => console.log("Esperando interacción..."));
+            // Guardamos el estado para "continuar" tras recargar
+            localStorage.setItem("musicPlaying", "true");
+        }
 
-// Intentar reproducir la música al cargar
-window.addEventListener("load", () => {
-    music.play().catch(()=>{ 
-        console.log("Autoplay bloqueado, espera interacción");
-    });
-});
+        // Recuperar posición de la música al recargar
+        window.addEventListener("load", () => {
+            const savedTime = localStorage.getItem("musicTime");
+            if (savedTime) music.currentTime = savedTime;
+            
+            // Intentar reproducir si ya estaba sonando antes de recargar
+            if (localStorage.getItem("musicPlaying") === "true") {
+                startMusic();
+            }
+        });
 
-// Mensajes graciosos
-const messages = [
-    "¿Estás segura? 🤨",
-    "Piénsalo bien...",
-    "Mira que luego no hay vuelta atrás 😶",
-    "Estoy empezando a ofenderme...",
-    "Última oportunidad..."
-];
+        // Guardar el tiempo cada segundo
+        setInterval(() => {
+            if (!music.paused) {
+                localStorage.setItem("musicTime", music.currentTime);
+            }
+        }, 1000);
 
-// Función para mover el botón No, sin salirse de pantalla
-function moveButton() {
-    const margin = 10; // margen de seguridad
-    const rect = noBtn.getBoundingClientRect();
-    const btnWidth = rect.width;
-    const btnHeight = rect.height;
+        // --- LÓGICA DE BOTONES ---
 
-    const containerWidth = window.innerWidth;
-    const containerHeight = window.innerHeight;
+        function moveButton() {
+            // Activar música en el primer intento de dar al No (interacción usuario)
+            startMusic();
 
-    const maxX = containerWidth - btnWidth - margin;
-    const maxY = containerHeight - btnHeight - margin - 150; // espacio superior para mensaje
+            attempts++;
+            
+            // Actualizar mensajes
+            if (attempts <= messages.length) {
+                message.innerText = messages[attempts - 1];
+            }
 
-    const x = margin + Math.random() * (maxX - margin);
-    const y = 150 + Math.random() * (maxY - 150);
+            // Escalar botón Sí (con límite para no tapar todo)
+            const newScale = Math.min(1 + attempts * 0.2, 3);
+            yesBtn.style.transform = `scale(${newScale})`;
 
-    noBtn.style.position = "absolute";
-    noBtn.style.left = x + "px";
-    noBtn.style.top = y + "px";
-}
+            // Mover el botón "No"
+            // Calculamos límites basados en el tamaño de la ventana
+            const padding = 50;
+            const maxX = window.innerWidth - noBtn.offsetWidth - padding;
+            const maxY = window.innerHeight - noBtn.offsetHeight - padding;
 
-// Click en No
-noBtn.addEventListener("click", function() {
-    attempts++;
-    console.log("Intento:", attempts);
+            // Generar posición aleatoria dentro de los bordes visibles
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
 
-    if (attempts <= messages.length) {
-        message.innerText = messages[attempts - 1];
-    }
+            noBtn.style.position = "fixed";
+            noBtn.style.left = randomX + "px";
+            noBtn.style.top = randomY + "px";
 
-    if (attempts === 6) {
-        message.innerText = "Estoy empezando a sospechar que no sabes usar esta web...";
-    }
+            // Final gracioso si insiste mucho
+            if (attempts > 12) {
+                document.getElementById("content").innerHTML = `
+                    <h1>💔 Daño Crítico</h1>
+                    <p>Has intentado rechazarme tantas veces que el sistema ha colapsado.</p>
+                    <button class="restart-btn" onclick="location.reload()">Vale, perdona, reiniciamos 😂</button>
+                `;
+            }
+        }
 
-    if (attempts === 7) {
-        message.innerText = "El botón 'Sí' está justo al lado eh 👀";
-    }
-
-    // Escalar botón Sí progresivamente
-    yesBtn.style.transform = "scale(" + (1 + attempts * 0.15) + ")";
-
-    // A partir del intento 5, mover No
-    if (attempts >= 5) {
-        moveButton();
-    }
-
-    // Final gracioso
-    if (attempts >= 8) {
-        document.getElementById("top").innerHTML = `
-            <h1>💔 Has roto el sistema.</h1>
-            <h2>Mi ego ha sufrido daño crítico.</h2>
-            <p>Reiniciando encanto en 3... 2... 1... 😎</p>
-            <button onclick="restartGame()">Vale, otra vez 😂</button>
-        `;
-        document.getElementById("bottom").style.display = "none";
-    }
-});
-
-// Click en Sí
-function yesClicked() {
-    document.getElementById("top").innerHTML = `
-        <h1>Sabía que dirías que sí 😎💘</h1>
-        <h2>Prepárate para la mejor cita de tu vida ❤️</h2>
-    `;
-    document.getElementById("bottom").style.display = "none";
-}
-
-// Reiniciar juego sin destruir audio
-function restartGame() {
-    attempts = 0;
-    document.getElementById("top").innerHTML = `
-        <h1>¿Quieres ser mi San Valentín? 💘</h1>
-        <div id="message"></div>
-    `;
-    document.getElementById("bottom").style.display = "block";
-    noBtn.style.position = "relative";
-    noBtn.style.left = "";
-    noBtn.style.top = "";
-    yesBtn.style.transform = "scale(1)";
-}
-
-</script>
-
+        function yesClicked() {
+            startMusic();
+            document.getElementById("content").innerHTML = `
+                <h1 style="font-size: 3rem;">¡SÍÍÍÍ! 😍</h1>
+                <h2 style="color: #cc0066;">Sabía que no podrías resistirte. Prepárate para lo mejor ❤️</h2>
+                <div style="font-size: 50px;">🌹✨🥂</div>
+            `;
+            // Limpiar estado de música si quieres que pare al final o dejarla
+        }
+    </script>
 </body>
 </html>
